@@ -25,6 +25,8 @@ The goal of the application is to reduce decision fatigue and improve convenienc
 
 # Developer
 
-Marieta Svetleva
+Marieta Svetleva 
+
 Fontys University of Applied Sciences
+
 Mobile Apps Development ICT Student
