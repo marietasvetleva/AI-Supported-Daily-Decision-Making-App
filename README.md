@@ -16,14 +16,14 @@ The goal of the application is to reduce decision fatigue and improve convenienc
 - Daily activity support
 - Simplified decision-making experience
 
-#Technologies Used
+# Technologies Used
 - Swift (programming language)
 - SwiftUI (mobile development framework)
 - Figma (design & prototyping)
 - Jira (project management)
 - GitLab (version control)
 
-#Developer
+# Developer
 
 Marieta Svetleva
 Fontys University of Applied Sciences
