@@ -1,32 +1,32 @@
 import SwiftUI
 
-struct PlanRoutePage: View {
+struct PlanningView: View {
     @State private var destination: String = ""
-    @State private var selectedTab: Tab = .routes
-
+    @State private var selectedTab = 1
+    
     let recentPlaces = ["Central Station", "Fontys R10"]
-
+    
     var body: some View {
         VStack(spacing: 0) {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 28) {
-
+                    
                     
                     Text("Plan a route")
                         .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.primary)
-
-                
+                    
+                    
                     VStack(alignment: .leading, spacing: 10) {
                         Text("From")
                             .font(.system(size: 15, weight: .regular))
                             .foregroundColor(.primary)
-
+                        
                         HStack(spacing: 14) {
                             Image(systemName: "location.circle")
                                 .font(.system(size: 20))
                                 .foregroundColor(.primary)
-
+                            
                             Text("Current Location")
                                 .font(.system(size: 16, weight: .regular))
                                 .foregroundColor(.primary)
@@ -38,22 +38,22 @@ struct PlanRoutePage: View {
                         .background(Color(hex: "#ECEAE4"))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
-
-                
+                    
+                    
                     VStack(alignment: .leading, spacing: 10) {
                         Text("To")
                             .font(.system(size: 15, weight: .regular))
                             .foregroundColor(.primary)
-
+                        
                         HStack(spacing: 14) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(.primary)
-
+                            
                             TextField("", text: $destination, prompt:
-                                Text("Search Destinations")
-                                    .foregroundColor(Color(hex: "#9A9A9A"))
-                                    .font(.system(size: 16).monospaced())
+                                        Text("Search Destinations")
+                                .foregroundColor(Color(hex: "#9A9A9A"))
+                                .font(.system(size: 16).monospaced())
                             )
                             .font(.system(size: 16).monospaced())
                             .foregroundColor(.primary)
@@ -63,13 +63,13 @@ struct PlanRoutePage: View {
                         .background(Color(hex: "#ECEAE4"))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
-
-                   
+                    
+                    
                     VStack(alignment: .leading, spacing: 14) {
                         Text("Recent")
                             .font(.system(size: 26, weight: .bold))
                             .foregroundColor(.primary)
-
+                        
                         VStack(spacing: 10) {
                             ForEach(recentPlaces, id: \.self) { place in
                                 Button(action: { destination = place }) {
@@ -86,8 +86,8 @@ struct PlanRoutePage: View {
                             }
                         }
                     }
-
-                
+                    
+                    
                     Button(action: {}) {
                         HStack(spacing: 10) {
                             Text("→")
@@ -109,15 +109,12 @@ struct PlanRoutePage: View {
                 .padding(.bottom, 40)
             }
             .background(Color(hex: "#F2EFE9"))
-
-        
-            CustomTabBar(selectedTab: $selectedTab)
         }
         .ignoresSafeArea(edges: .bottom)
     }
 }
+    
+    #Preview {
+        PlanningView()
+    }
 
-// MARK: - Preview
-#Preview {
-    PlanRoutePage()
-}

@@ -21,7 +21,9 @@ extension Color {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
+
         let a, r, g, b: UInt64
+
         switch hex.count {
         case 3:
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
@@ -30,8 +32,9 @@ extension Color {
         case 8:
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
-            (a, r, g, b) = (1, 1, 1, 0)
+            (a, r, g, b) = (255, 255, 255, 255)
         }
+
         self.init(
             .sRGB,
             red: Double(r) / 255,
@@ -42,7 +45,6 @@ extension Color {
     }
 }
 
-
 struct NearbyPlace: Identifiable {
     let id = UUID()
     let name: String
@@ -51,8 +53,6 @@ struct NearbyPlace: Identifiable {
     let crowdColor: Color
     let crowdTextColor: Color
 }
-
-
 
 struct WeatherStatsCard: View {
     var body: some View {
@@ -75,11 +75,10 @@ struct WeatherStatsCard: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.primary)
+
             Text(label)
-                .font(.system(size: 11, weight: .regular))
+                .font(.system(size: 11))
                 .foregroundColor(.labelGray)
-                .tracking(0.4)
         }
         .frame(maxWidth: .infinity)
     }
@@ -104,9 +103,8 @@ struct DepartureAlertCard: View {
                     .foregroundColor(Color(hex: "#B85C10"))
 
                 Text("Rain starts at 9:30  · 22 min commute via\nBus 401 right now")
-                    .font(.system(size: 14, weight: .regular))
+                    .font(.system(size: 14))
                     .foregroundColor(Color(hex: "#B85C10").opacity(0.85))
-                    .lineSpacing(2)
             }
 
             Spacer()
@@ -114,10 +112,6 @@ struct DepartureAlertCard: View {
         .padding(16)
         .background(Color.accentOrangeSoft)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.accentOrange.opacity(0.5), lineWidth: 1)
-        )
     }
 }
 
@@ -133,6 +127,7 @@ struct PlanRouteButton: View {
                     Text("Plan a route")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
+
                     Text("Live traffic · ETA")
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.8))
@@ -161,14 +156,12 @@ struct ActionCard: View {
                     .fill(iconColor)
                     .frame(width: 44, height: 44)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                    Text(subtitle)
-                        .font(.system(size: 13))
-                        .foregroundColor(.labelGray)
-                }
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+
+                Text(subtitle)
+                    .font(.system(size: 13))
+                    .foregroundColor(.labelGray)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -187,26 +180,21 @@ struct NearbyPlaceCard: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(hex: "#EDE9E2"))
                 .frame(height: 90)
-                .frame(maxWidth: .infinity)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(place.name)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
+            Text(place.name)
+                .font(.system(size: 15, weight: .semibold))
 
-                Text(place.walkTime)
-                    .font(.system(size: 13))
-                    .foregroundColor(.labelGray)
+            Text(place.walkTime)
+                .font(.system(size: 13))
+                .foregroundColor(.labelGray)
 
-                Text(place.crowdLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(place.crowdTextColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(place.crowdColor)
-                    .clipShape(Capsule())
-            }
+            Text(place.crowdLabel)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(place.crowdTextColor)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(place.crowdColor)
+                .clipShape(Capsule())
         }
         .padding(12)
         .background(Color.cardBackground)
@@ -215,146 +203,150 @@ struct NearbyPlaceCard: View {
     }
 }
 
-enum Tab: String, CaseIterable {
-    case home = "Home"
-    case routes = "Routes"
-    case places = "Places"
-    case forYou = "For you"
-    case settings = "Settings"
-
-    var icon: String {
-        switch self {
-        case .home: return "house"
-        case .routes: return "arrow.triangle.swap"
-        case .places: return "mappin.circle"
-        case .forYou: return "sparkles"
-        case .settings: return "gearshape"
-        }
-    }
-}
-
 struct CustomTabBar: View {
-    @Binding var selectedTab: Tab
+    @Binding var selectedTab: Int
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(Tab.allCases, id: \.self) { tab in
-                Button(action: { selectedTab = tab }) {
-                    VStack(spacing: 5) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 22))
-                            .foregroundColor(selectedTab == tab ? .accentGreen : .labelGray)
-
-                        Text(tab.rawValue)
-                            .font(.system(size: 10))
-                            .foregroundColor(selectedTab == tab ? .accentGreen : .labelGray)
-
-                        if selectedTab == tab {
-                            Circle()
-                                .fill(Color.accentGreen)
-                                .frame(width: 4, height: 4)
-                        } else {
-                            Spacer().frame(height: 4)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
-            }
+            tabButton(0, "house", "Home")
+            tabButton(1, "arrow.triangle.swap", "Routes")
+            tabButton(3, "sparkles", "For you")
         }
         .padding(.top, 10)
         .padding(.bottom, 20)
         .background(Color.cardBackground)
         .overlay(Divider(), alignment: .top)
     }
+
+    func tabButton(_ index: Int, _ icon: String, _ title: String) -> some View {
+        Button {
+            selectedTab = index
+        } label: {
+            VStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+
+                Text(title)
+                    .font(.system(size: 10))
+
+                if selectedTab == index {
+                    Circle()
+                        .fill(Color.accentGreen)
+                        .frame(width: 4, height: 4)
+                } else {
+                    Spacer().frame(height: 4)
+                }
+            }
+            .foregroundColor(selectedTab == index ? .accentGreen : .labelGray)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
 }
 
 struct HomeView: View {
-    @State private var selectedTab: Tab = .routes
+    @State private var selectedTab = 0
 
     let nearbyPlaces: [NearbyPlace] = [
-        NearbyPlace(name: "Doppio Espresso", walkTime: "3 min walk",
-                    crowdLabel: "Quiet now", crowdColor: .tagGreen, crowdTextColor: .tagGreenText),
-        NearbyPlace(name: "Albert Heijn", walkTime: "6 min walk",
-                    crowdLabel: "Moderate", crowdColor: .tagOrange, crowdTextColor: .tagOrangeText),
-        NearbyPlace(name: "Starbucks", walkTime: "9 min walk",
-                    crowdLabel: "Empty", crowdColor: .tagRed, crowdTextColor: .tagRedText),
+        NearbyPlace(name: "Doppio Espresso", walkTime: "3 min walk", crowdLabel: "Quiet now", crowdColor: .tagGreen, crowdTextColor: .tagGreenText),
+        NearbyPlace(name: "Albert Heijn", walkTime: "6 min walk", crowdLabel: "Moderate", crowdColor: .tagOrange, crowdTextColor: .tagOrangeText),
+        NearbyPlace(name: "Starbucks", walkTime: "9 min walk", crowdLabel: "Empty", crowdColor: .tagRed, crowdTextColor: .tagRedText)
     ]
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
+            pageContent
 
-                    // MARK: Greeting
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Good morning")
-                            .font(.system(size: 16, weight: .regular))
-                            .foregroundColor(.labelGray)
-                        Text("Hi, Marieta")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.primary)
-                    }
-
-                
-                    WeatherStatsCard()
-
-                    DepartureAlertCard()
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("WHAT DO YOU NEED?")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.labelGray)
-                            .tracking(0.8)
-
-                        PlanRouteButton()
-
-                        HStack(spacing: 12) {
-                            ActionCard(
-                                icon: "mappin",
-                                iconColor: Color.accentGreenSoft,
-                                title: "Find a place",
-                                subtitle: "Nearby  crowd levels"
-                            )
-                            ActionCard(
-                                icon: "star",
-                                iconColor: Color.accentPeach,
-                                title: "Suggest activity",
-                                subtitle: "Based on your day"
-                            )
-                        }
-                    }
-
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("NEARBY NOW")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.labelGray)
-                            .tracking(0.8)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(nearbyPlaces) { place in
-                                    NearbyPlaceCard(place: place)
-                                }
-                            }
-                            .padding(.trailing, 20)
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 32)
-            }
-            .background(Color.appBackground)
-
-            
             CustomTabBar(selectedTab: $selectedTab)
         }
         .ignoresSafeArea(edges: .bottom)
     }
+
+    @ViewBuilder
+    private var pageContent: some View {
+        if selectedTab == 0 {
+            homeContent
+        } else if selectedTab == 1 {
+            PlanningView()
+        } else if selectedTab == 3 {
+            ForYouView()
+        }
+    }
+
+    private var homeContent: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Good morning")
+                        .font(.system(size: 16))
+                        .foregroundColor(.labelGray)
+
+                    Text("Hi, Marieta")
+                        .font(.system(size: 32, weight: .bold))
+                }
+
+                WeatherStatsCard()
+                DepartureAlertCard()
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("WHAT DO YOU NEED?")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.labelGray)
+
+                    PlanRouteButton()
+
+                    HStack(spacing: 12) {
+                        ActionCard(
+                            icon: "mappin",
+                            iconColor: .accentGreenSoft,
+                            title: "Find a place",
+                            subtitle: "Nearby crowd levels"
+                        )
+
+                        ActionCard(
+                            icon: "star",
+                            iconColor: .accentPeach,
+                            title: "Suggest activity",
+                            subtitle: "Based on your day"
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("NEARBY NOW")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.labelGray)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(nearbyPlaces) { place in
+                                NearbyPlaceCard(place: place)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+            .padding(.bottom, 32)
+        }
+        .background(Color.appBackground)
+    }
 }
 
+struct PlaceholderPage: View {
+    let title: String
+
+    var body: some View {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+
+            Text(title)
+                .font(.system(size: 28, weight: .bold))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
 
 #Preview {
     HomeView()
