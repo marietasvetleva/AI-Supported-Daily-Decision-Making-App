@@ -1,6 +1,6 @@
 import Foundation
 
-enum RouteTag {
+enum RouteTag: String {
     case fastest
     case calmest
     case scenic

@@ -120,9 +120,9 @@ struct PermissionsView: View {
     }
 }
     
-    #Preview {
-        NavigationStack {
-            PermissionsView()
-        }
+#Preview {
+    NavigationStack {
+        PermissionsView()
+            .environmentObject(UserPreferencesViewModel())
     }
-
+}

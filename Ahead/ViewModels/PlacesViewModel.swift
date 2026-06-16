@@ -1,5 +1,5 @@
 import Foundation
-public import Combine
+import Combine
 
 @MainActor
 final class PlacesViewModel: ObservableObject {
@@ -12,7 +12,10 @@ final class PlacesViewModel: ObservableObject {
         isLoading = true
 
         do {
-            places = try await placesService.getNearbyPlaces()
+            places = try await placesService.getNearbyPlaces(
+                latitude: 51.4416,
+                longitude: 5.4697
+            )
         } catch {
             print("Places loading error:", error)
         }

@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 extension Color {
     static let appBackground = Color(hex: "#F2EFE9")
@@ -26,11 +27,26 @@ extension Color {
 
         switch hex.count {
         case 3:
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+            (a, r, g, b) = (
+                255,
+                (int >> 8) * 17,
+                (int >> 4 & 0xF) * 17,
+                (int & 0xF) * 17
+            )
         case 6:
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+            (a, r, g, b) = (
+                255,
+                int >> 16,
+                int >> 8 & 0xFF,
+                int & 0xFF
+            )
         case 8:
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+            (a, r, g, b) = (
+                int >> 24,
+                int >> 16 & 0xFF,
+                int >> 8 & 0xFF,
+                int & 0xFF
+            )
         default:
             (a, r, g, b) = (255, 255, 255, 255)
         }
@@ -45,16 +61,26 @@ extension Color {
     }
 }
 
-
 struct WeatherStatsCard: View {
+    var weather: WeatherInfo?
+
     var body: some View {
         HStack(spacing: 0) {
-            statItem(value: "14°", label: "RAIN 9:30")
+            statItem(
+                value: weather == nil ? "--°" : "\(weather!.temperature)°",
+                label: weather?.condition.uppercased() ?? "WEATHER"
+            )
+
             dividerLine
+
             statItem(value: "Mod.", label: "TRAFFIC")
+
             dividerLine
+
             statItem(value: "Low", label: "CROWDS")
+
             dividerLine
+
             statItem(value: "22m", label: "TO WORK")
         }
         .padding(.vertical, 18)
@@ -83,18 +109,24 @@ struct WeatherStatsCard: View {
 }
 
 struct DepartureAlertCard: View {
+    let recommendation: Recommendation?
+
     var body: some View {
         HStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.accentOrange)
                 .frame(width: 48, height: 48)
+                .overlay(
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.white)
+                )
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Leave by 8:45 am")
+                Text(recommendation?.title ?? "Ahead is preparing your plan")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(Color(hex: "#B85C10"))
 
-                Text("Rain starts at 9:30  · 22 min commute via\nBus 401 right now")
+                Text(recommendation?.reason ?? "Allow location so Ahead can suggest nearby places and smarter routes.")
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "#B85C10").opacity(0.85))
             }
@@ -114,6 +146,10 @@ struct PlanRouteButton: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.accentGreenSoft.opacity(0.4))
                     .frame(width: 48, height: 48)
+                    .overlay(
+                        Image(systemName: "arrow.triangle.swap")
+                            .foregroundColor(.white)
+                    )
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Plan a route")
@@ -147,6 +183,10 @@ struct ActionCard: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(iconColor)
                     .frame(width: 44, height: 44)
+                    .overlay(
+                        Image(systemName: icon)
+                            .foregroundColor(.accentGreen)
+                    )
 
                 Text(title)
                     .font(.system(size: 16, weight: .semibold))
@@ -172,13 +212,20 @@ struct NearbyPlaceCard: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(hex: "#EDE9E2"))
                 .frame(height: 90)
+                .overlay(
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.accentGreen)
+                )
 
             Text(place.name)
                 .font(.system(size: 15, weight: .semibold))
+                .lineLimit(1)
 
             Text(place.address)
                 .font(.system(size: 13))
                 .foregroundColor(.labelGray)
+                .lineLimit(2)
 
             Text(place.crowdLevel.rawValue)
                 .font(.system(size: 12, weight: .medium))
@@ -239,7 +286,9 @@ struct CustomTabBar: View {
 struct HomeView: View {
     @State private var selectedTab = 0
     @StateObject private var viewModel = HomeViewModel()
-    
+    @StateObject private var locationService = LocationService()
+
+    @EnvironmentObject var preferencesVM: UserPreferencesViewModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -248,6 +297,21 @@ struct HomeView: View {
             CustomTabBar(selectedTab: $selectedTab)
         }
         .ignoresSafeArea(edges: .bottom)
+        .task {
+            locationService.requestPermission()
+            locationService.requestLocation()
+        }
+        .onChange(of: locationService.currentLocation) { _, location in
+            guard let location else { return }
+
+            Task {
+                await viewModel.load(
+                    preferences: preferencesVM.preferences,
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                )
+            }
+        }
     }
 
     @ViewBuilder
@@ -255,7 +319,7 @@ struct HomeView: View {
         if selectedTab == 0 {
             homeContent
         } else if selectedTab == 1 {
-            PlanningView()
+            RoutesView()
         } else if selectedTab == 3 {
             ForYouView()
         }
@@ -265,16 +329,46 @@ struct HomeView: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Good morning")
-                        .font(.system(size: 16))
-                        .foregroundColor(.labelGray)
-
-                    Text("Hi, Marieta")
-                        .font(.system(size: 32, weight: .bold))
+                                            
+                    Text("Hi!")
+                    .font(.system(size: 32, weight: .bold))
                 }
 
-                WeatherStatsCard()
-                DepartureAlertCard()
+                if viewModel.isLoading {
+                    ProgressView("Loading your context...")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 12)
+                }
+
+                WeatherStatsCard(weather: viewModel.weather)
+
+                DepartureAlertCard(recommendation: viewModel.recommendation)
+
+                if let recommendation = viewModel.recommendation {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("FOR YOU")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.labelGray)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(recommendation.title)
+                                .font(.headline)
+
+                            Text(recommendation.reason)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            if let place = recommendation.place {
+                                Text("📍 \(place.name)")
+                                    .font(.caption)
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.cardBackground)
+                        .cornerRadius(16)
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("WHAT DO YOU NEED?")
@@ -305,10 +399,20 @@ struct HomeView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.labelGray)
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(viewModel.nearbyPlaces) { place in
-                                NearbyPlaceCard(place: place)
+                    if viewModel.nearbyPlaces.isEmpty {
+                        Text("Nearby places will appear after location is available.")
+                            .font(.system(size: 14))
+                            .foregroundColor(.labelGray)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.cardBackground)
+                            .cornerRadius(16)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(viewModel.nearbyPlaces) { place in
+                                    NearbyPlaceCard(place: place)
+                                }
                             }
                         }
                     }
@@ -322,20 +426,7 @@ struct HomeView: View {
     }
 }
 
-struct PlaceholderPage: View {
-    let title: String
-
-    var body: some View {
-        ZStack {
-            Color.appBackground.ignoresSafeArea()
-
-            Text(title)
-                .font(.system(size: 28, weight: .bold))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
 #Preview {
     HomeView()
+        .environmentObject(UserPreferencesViewModel())
 }

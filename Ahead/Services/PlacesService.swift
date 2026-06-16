@@ -1,43 +1,42 @@
 import Foundation
+import MapKit
 
 final class PlacesService {
 
-    func getNearbyPlaces() async throws -> [Place] {
+    func getNearbyPlaces(
+        latitude: Double,
+        longitude: Double
+    ) async throws -> [Place] {
 
-        return [
+        let request = MKLocalSearch.Request()
 
-            Place(
-                id: UUID(),
-                name: "Doppio Espresso",
-                category: "Cafe",
-                address: "Stationsplein 1",
-                rating: 4.5,
-                isOpen: true,
-                noiseLevel: .quiet,
-                crowdLevel: .low
+        request.naturalLanguageQuery = "cafe OR park OR library OR restaurant"
+
+        request.region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude: latitude,
+                longitude: longitude
             ),
+            latitudinalMeters: 3000,
+            longitudinalMeters: 3000
+        )
+
+        let response = try await MKLocalSearch(
+            request: request
+        ).start()
+
+        return response.mapItems.map { item in
 
             Place(
                 id: UUID(),
-                name: "Albert Heijn",
-                category: "Supermarket",
-                address: "Heuvel Galerie",
-                rating: 4.2,
+                name: item.name ?? "Unknown",
+                category: item.pointOfInterestCategory?.rawValue ?? "Place",
+                address: item.placemark.title ?? "",
+                rating: 4.0,
                 isOpen: true,
                 noiseLevel: .moderate,
                 crowdLevel: .medium
-            ),
-
-            Place(
-                id: UUID(),
-                name: "Stadswandelpark",
-                category: "Park",
-                address: "Stadswandelpark Eindhoven",
-                rating: 4.8,
-                isOpen: true,
-                noiseLevel: .quiet,
-                crowdLevel: .low
             )
-        ]
+        }
     }
 }

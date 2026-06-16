@@ -1,17 +1,40 @@
 import Foundation
 
 final class RouteService {
-    func getRoutes() async throws -> [RouteOption] {
+
+    func getRoutes() -> [RouteOption] {
         return [
             RouteOption(
-                title: "Via Vestdijk",
-                durationMinutes: 22,
-                distanceKm: 4.1,
-                transportType: .transit,
+                title: "Bike to Fontys",
+                durationMinutes: 12,
+                distanceKm: 3.4,
+                transportType: .bike,
                 crowdLevel: .low,
-                trafficLevel: .moderate,
+                trafficLevel: .low,
                 tag: .fastest,
-                reason: "Fastest right now. Low crowds on bus 401."
+                reason: "Fastest and least crowded option right now."
+            ),
+
+            RouteOption(
+                title: "Bus 401 to Eindhoven Station",
+                durationMinutes: 22,
+                distanceKm: 5.8,
+                transportType: .transit,
+                crowdLevel: .medium,
+                trafficLevel: .moderate,
+                tag: .calmest,
+                reason: "Good option, but slightly busier than usual."
+            ),
+
+            RouteOption(
+                title: "Walk to Doppio Espresso",
+                durationMinutes: 6,
+                distanceKm: 0.5,
+                transportType: .walk,
+                crowdLevel: .low,
+                trafficLevel: .low,
+                tag: .scenic,
+                reason: "Short walk and quiet nearby place."
             )
         ]
     }

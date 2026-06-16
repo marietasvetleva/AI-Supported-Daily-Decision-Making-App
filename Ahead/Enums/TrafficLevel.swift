@@ -1,6 +1,6 @@
 import Foundation
 
-enum TrafficLevel {
+enum TrafficLevel: String {
     case low
     case moderate
     case heavy
