@@ -45,14 +45,6 @@ extension Color {
     }
 }
 
-struct NearbyPlace: Identifiable {
-    let id = UUID()
-    let name: String
-    let walkTime: String
-    let crowdLabel: String
-    let crowdColor: Color
-    let crowdTextColor: Color
-}
 
 struct WeatherStatsCard: View {
     var body: some View {
@@ -173,7 +165,7 @@ struct ActionCard: View {
 }
 
 struct NearbyPlaceCard: View {
-    let place: NearbyPlace
+    let place: Place
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -184,16 +176,16 @@ struct NearbyPlaceCard: View {
             Text(place.name)
                 .font(.system(size: 15, weight: .semibold))
 
-            Text(place.walkTime)
+            Text(place.address)
                 .font(.system(size: 13))
                 .foregroundColor(.labelGray)
 
-            Text(place.crowdLabel)
+            Text(place.crowdLevel.rawValue)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(place.crowdTextColor)
+                .foregroundColor(.tagGreenText)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(place.crowdColor)
+                .background(Color.tagGreen)
                 .clipShape(Capsule())
         }
         .padding(12)
@@ -246,12 +238,8 @@ struct CustomTabBar: View {
 
 struct HomeView: View {
     @State private var selectedTab = 0
-
-    let nearbyPlaces: [NearbyPlace] = [
-        NearbyPlace(name: "Doppio Espresso", walkTime: "3 min walk", crowdLabel: "Quiet now", crowdColor: .tagGreen, crowdTextColor: .tagGreenText),
-        NearbyPlace(name: "Albert Heijn", walkTime: "6 min walk", crowdLabel: "Moderate", crowdColor: .tagOrange, crowdTextColor: .tagOrangeText),
-        NearbyPlace(name: "Starbucks", walkTime: "9 min walk", crowdLabel: "Empty", crowdColor: .tagRed, crowdTextColor: .tagRedText)
-    ]
+    @StateObject private var viewModel = HomeViewModel()
+    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -319,7 +307,7 @@ struct HomeView: View {
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(nearbyPlaces) { place in
+                            ForEach(viewModel.nearbyPlaces) { place in
                                 NearbyPlaceCard(place: place)
                             }
                         }

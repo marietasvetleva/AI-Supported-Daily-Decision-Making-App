@@ -1,8 +1,8 @@
 import Foundation
 
 
-enum CrowdLevel {
-    case low
-    case medium
-    case high
+enum CrowdLevel: String {
+    case low = "Low"
+    case medium = "Medium"
+    case high = "High"
 }

@@ -1,92 +1,328 @@
 import SwiftUI
 
+
 struct PreferencesView: View {
-    @State private var selectedTransport: String? = nil
-    @State private var selectedInterests: Set<String> = []
-    @State private var avoidCrowdedPlaces = true
 
-    let transportOptions = ["🚶 Walk", "🚲 Bike", "🚌 Transit", "🚗 Car"]
-    let interestOptions = ["Parks", "Food", "Culture", "Sports"]
+    @EnvironmentObject var preferencesVM: UserPreferencesViewModel
 
-    var body: some View {
-        ZStack {
-            Color(red: 0.96, green: 0.95, blue: 0.92)
-                .ignoresSafeArea()
+    struct PreferencesView: View {
+        @State private var selectedTransport: String? = nil
+        @State private var selectedDecisionStyle: String? = nil
+        @State private var selectedPlaces: Set<String> = []
+        @State private var avoidCrowdedPlaces = false
+        @State private var preferQuietPlaces = false
+        @State private var maxWalkingMinutes = 15.0
 
-            VStack(alignment: .leading, spacing: 28) {
-                Text("How do you get around?")
-                    .font(.system(size: 20, weight: .bold))
+        let transportOptions = ["🚶 Walk", "🚲 Bike", "🚌 Transit", "🚗 Car"]
 
-                LazyVGrid(columns: [GridItem(), GridItem()], spacing: 18) {
-                    ForEach(transportOptions, id: \.self) { option in
-                        preferenceButton(
-                            title: option,
-                            isSelected: selectedTransport == option
-                        ) {
-                            selectedTransport = option
+        let decisionStyleOptions = [
+            "Fastest",
+            "Quiet",
+            "Cheap",
+            "Balanced"
+        ]
+
+        let placeOptions = [
+            "Cafes",
+            "Study spots",
+            "Parks",
+            "Food"
+        ]
+
+        var body: some View {
+            ZStack {
+                Color.appBackground
+                    .ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 26) {
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Tell Ahead about you")
+                                .font(.system(size: 32, weight: .bold))
+
+                            Text("This helps the AI recommend better routes, places, and activities.")
+                                .font(.system(size: 16))
+                                .foregroundColor(.labelGray)
                         }
-                    }
-                }
 
-                Divider()
+                        sectionTitle("How do you usually move?")
 
-                Text("Interests")
-                    .font(.system(size: 20, weight: .bold))
-
-                LazyVGrid(columns: [GridItem(), GridItem()], spacing: 18) {
-                    ForEach(interestOptions, id: \.self) { option in
-                        preferenceButton(
-                            title: option,
-                            isSelected: selectedInterests.contains(option)
-                        ) {
-                            if selectedInterests.contains(option) {
-                                selectedInterests.remove(option)
-                            } else {
-                                selectedInterests.insert(option)
+                        LazyVGrid(columns: [GridItem(), GridItem()], spacing: 14) {
+                            ForEach(transportOptions, id: \.self) { option in
+                                preferenceButton(
+                                    title: option,
+                                    isSelected: selectedTransport == option
+                                ) {
+                                    selectedTransport = option
+                                }
                             }
                         }
+
+                        sectionTitle("What matters most?")
+
+                        LazyVGrid(columns: [GridItem(), GridItem()], spacing: 14) {
+                            ForEach(decisionStyleOptions, id: \.self) { option in
+                                preferenceButton(
+                                    title: option,
+                                    isSelected: selectedDecisionStyle == option
+                                ) {
+                                    selectedDecisionStyle = option
+                                }
+                            }
+                        }
+
+                        sectionTitle("Places you like")
+
+                        LazyVGrid(columns: [GridItem(), GridItem()], spacing: 14) {
+                            ForEach(placeOptions, id: \.self) { option in
+                                preferenceButton(
+                                    title: option,
+                                    isSelected: selectedPlaces.contains(option)
+                                ) {
+                                    if selectedPlaces.contains(option) {
+                                        selectedPlaces.remove(option)
+                                    } else {
+                                        selectedPlaces.insert(option)
+                                    }
+                                }
+                            }
+                        }
+
+                        sectionTitle("Comfort preferences")
+
+                        ToggleRow(
+                            title: "Avoid crowded places",
+                            isOn: $avoidCrowdedPlaces
+                        )
+
+                        ToggleRow(
+                            title: "Prefer quiet places",
+                            isOn: $preferQuietPlaces
+                        )
+
+                        sectionTitle("Max walking time")
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("\(Int(maxWalkingMinutes)) minutes")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.accentGreen)
+
+                            Slider(value: $maxWalkingMinutes, in: 5...45, step: 5)
+                                .tint(.accentGreen)
+                        }
+                        .padding()
+                        .background(Color.cardBackground)
+                        .cornerRadius(16)
+
+                        NavigationLink {
+                            PermissionsView()
+                        } label: {
+                            Text("Next")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 58)
+                                .background(Color.accentGreen)
+                                .cornerRadius(12)
+                        }
+                        .padding(.top, 10)
                     }
+                    .padding(.horizontal, 28)
+                    .padding(.top, 60)
+                    .padding(.bottom, 34)
                 }
+            }
+        }
 
-                Divider()
+        private func sectionTitle(_ title: String) -> some View {
+            Text(title.uppercased())
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.labelGray)
+        }
 
-                Text("Avoid")
-                    .font(.system(size: 20, weight: .bold))
+        private func preferenceButton(
+            title: String,
+            isSelected: Bool,
+            action: @escaping () -> Void
+        ) -> some View {
+            Button(action: action) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(isSelected ? .white : .accentGreen)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(
+                        isSelected
+                        ? Color.accentGreen
+                        : Color.cardBackground
+                    )
+                    .cornerRadius(14)
+            }
+            .buttonStyle(.plain)
+        }
+    }
 
-                HStack {
-                    Text("Crowded Places")
-                        .font(.system(size: 16, design: .monospaced))
-                        .foregroundColor(Color(red: 0.0, green: 0.55, blue: 0.40))
+    struct ToggleRow: View {
+        let title: String
+        @Binding var isOn: Bool
 
-                    Spacer()
-
-                    Toggle("", isOn: $avoidCrowdedPlaces)
-                        .labelsHidden()
-                        .tint(Color(red: 0.10, green: 0.65, blue: 0.50))
-                }
-                .padding()
-                .background(.white)
-                .cornerRadius(12)
+        var body: some View {
+            HStack {
+                Text(title)
+                    .font(.system(size: 16, weight: .medium))
 
                 Spacer()
 
-                NavigationLink {
-                    PermissionsView()
-                } label: {
-                    Text("Next")
-                        .font(.system(size: 17, weight: .semibold, design: .monospaced))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 58)
-                        .background(Color(red: 0.10, green: 0.65, blue: 0.50))
-                        .cornerRadius(10)
-                }
+                Toggle("", isOn: $isOn)
+                    .labelsHidden()
+                    .tint(.accentGreen)
             }
-            .padding(.horizontal, 28)
-            .padding(.top, 70)
-            .padding(.bottom, 34)
+            .padding()
+            .background(Color.cardBackground)
+            .cornerRadius(16)
         }
-        .navigationBarBackButtonHidden(false)
+    }
+
+    #Preview {
+        NavigationStack {
+            PreferencesView()
+        }
+    }
+
+    @State private var selectedTransport: String? = nil
+    @State private var selectedDecisionStyle: String? = nil
+    @State private var selectedPlaces: Set<String> = []
+    @State private var avoidCrowdedPlaces = true
+    @State private var preferQuietPlaces = true
+    @State private var maxWalkingMinutes = 15.0
+
+    let transportOptions = ["🚶 Walk", "🚲 Bike", "🚌 Transit", "🚗 Car"]
+
+    let decisionStyleOptions = [
+        "Fastest",
+        "Quiet",
+        "Cheap",
+        "Balanced"
+    ]
+
+    let placeOptions = [
+        "Cafes",
+        "Study spots",
+        "Parks",
+        "Food"
+    ]
+
+    var body: some View {
+        ZStack {
+            Color.appBackground
+                .ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 26) {
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Tell Ahead about you")
+                            .font(.system(size: 32, weight: .bold))
+
+                        Text("This helps the AI recommend better routes, places, and activities.")
+                            .font(.system(size: 16))
+                            .foregroundColor(.labelGray)
+                    }
+
+                    sectionTitle("How do you usually move?")
+
+                    LazyVGrid(columns: [GridItem(), GridItem()], spacing: 14) {
+                        ForEach(transportOptions, id: \.self) { option in
+                            preferenceButton(
+                                title: option,
+                                isSelected: selectedTransport == option
+                            ) {
+                                selectedTransport = option
+                            }
+                        }
+                    }
+
+                    sectionTitle("What matters most?")
+
+                    LazyVGrid(columns: [GridItem(), GridItem()], spacing: 14) {
+                        ForEach(decisionStyleOptions, id: \.self) { option in
+                            preferenceButton(
+                                title: option,
+                                isSelected: selectedDecisionStyle == option
+                            ) {
+                                selectedDecisionStyle = option
+                            }
+                        }
+                    }
+
+                    sectionTitle("Places you like")
+
+                    LazyVGrid(columns: [GridItem(), GridItem()], spacing: 14) {
+                        ForEach(placeOptions, id: \.self) { option in
+                            preferenceButton(
+                                title: option,
+                                isSelected: selectedPlaces.contains(option)
+                            ) {
+                                if selectedPlaces.contains(option) {
+                                    selectedPlaces.remove(option)
+                                } else {
+                                    selectedPlaces.insert(option)
+                                }
+                            }
+                        }
+                    }
+
+                    sectionTitle("Comfort preferences")
+
+                    ToggleRow(
+                        title: "Avoid crowded places",
+                        isOn: $avoidCrowdedPlaces
+                    )
+
+                    ToggleRow(
+                        title: "Prefer quiet places",
+                        isOn: $preferQuietPlaces
+                    )
+
+                    sectionTitle("Max walking time")
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("\(Int(maxWalkingMinutes)) minutes")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.accentGreen)
+
+                        Slider(value: $maxWalkingMinutes, in: 5...45, step: 5)
+                            .tint(.accentGreen)
+                    }
+                    .padding()
+                    .background(Color.cardBackground)
+                    .cornerRadius(16)
+
+                    NavigationLink {
+                        PermissionsView()
+                    } label: {
+                        Text("Next")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 58)
+                            .background(Color.accentGreen)
+                            .cornerRadius(12)
+                    }
+                    .padding(.top, 10)
+                }
+                .padding(.horizontal, 28)
+                .padding(.top, 60)
+                .padding(.bottom, 34)
+            }
+        }
+    }
+
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(.labelGray)
     }
 
     private func preferenceButton(
@@ -96,17 +332,39 @@ struct PreferencesView: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 16, weight: .semibold, design: .monospaced))
-                .foregroundColor(.white)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(isSelected ? .white : .accentGreen)
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 52)
                 .background(
                     isSelected
-                    ? Color(red: 0.0, green: 0.36, blue: 0.30)
-                    : Color(red: 0.10, green: 0.65, blue: 0.50)
+                    ? Color.accentGreen
+                    : Color.cardBackground
                 )
-                .cornerRadius(8)
+                .cornerRadius(14)
         }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ToggleRow: View {
+    let title: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 16, weight: .medium))
+
+            Spacer()
+
+            Toggle("", isOn: $isOn)
+                .labelsHidden()
+                .tint(.accentGreen)
+        }
+        .padding()
+        .background(Color.cardBackground)
+        .cornerRadius(16)
     }
 }
 

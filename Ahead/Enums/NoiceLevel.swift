@@ -1,7 +1,7 @@
 import Foundation
 
-enum NoiseLevel {
-    case quiet
-    case moderate
-    case loud
+enum NoiseLevel: String {
+    case quiet = "Quiet"
+    case moderate = "Moderate"
+    case loud = "Loud"
 }

@@ -1,82 +1,102 @@
 import SwiftUI
 
 struct ForYouView: View {
+
+    @EnvironmentObject var preferencesVM: UserPreferencesViewModel
+    @StateObject private var viewModel = ForYouViewModel()
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("AI · PERSONALISED")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.accentGreen)
+                header
 
-                    Text("For You")
-                        .font(.system(size: 34, weight: .bold))
-
-                    Text("Thu 28 May · Veenendaal")
-                        .font(.system(size: 18))
-                        .foregroundColor(.labelGray)
+                if viewModel.isLoading {
+                    ProgressView("Creating your AI recommendation...")
+                        .padding(.top, 30)
+                } else if let error = viewModel.errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                } else if let recommendation = viewModel.recommendation {
+                    sectionTitle("AI RECOMMENDATION")
+                    aiRecommendationCard(recommendation)
                 }
-                .padding(.top, 24)
-
-                sectionTitle("URGENT")
-
-                urgentCard
 
                 sectionTitle("SMART INSIGHTS")
 
                 insightCard(
                     iconColor: .accentOrangeSoft,
-                    title: "Traffic heavier than usual",
-                    text: "Your usual route via A12 is 14 min slower. Via Rondweg is faster today.",
-                    tag: "+14 min delay",
+                    title: "Weather-aware suggestion",
+                    text: "Ahead checks your weather, preferences, nearby places, and crowd levels before suggesting what to do.",
+                    tag: "AI based",
                     time: "Now"
                 )
 
                 insightCard(
                     iconColor: .accentGreenSoft,
-                    title: "Stadswandelpark is quiet now",
-                    text: "Only 4 people checked in. Perfect for a lunch walk.",
-                    tag: "Low crowd",
-                    time: "12:00–13:00"
+                    title: "Personalised for you",
+                    text: "Your preferences help Ahead avoid crowded or noisy places when making suggestions.",
+                    tag: "Personalised",
+                    time: "Today"
                 )
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 30)
         }
         .background(Color.appBackground)
+        .task {
+            await viewModel.load(preferences: preferencesVM.preferences)
+        }
     }
 
-    func sectionTitle(_ text: String) -> some View {
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("AI · PERSONALISED")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.accentGreen)
+
+            Text("For You")
+                .font(.system(size: 34, weight: .bold))
+
+            Text("Smart suggestions based on your day")
+                .font(.system(size: 18))
+                .foregroundColor(.labelGray)
+        }
+        .padding(.top, 24)
+    }
+
+    private func sectionTitle(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 14, weight: .bold))
             .foregroundColor(.labelGray)
             .tracking(1)
     }
 
-    var urgentCard: some View {
+    private func aiRecommendationCard(_ recommendation: Recommendation) -> some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("⏰ TIME-SENSITIVE")
+            Text("✨ BEST CHOICE NOW")
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(Color(hex: "#9B5B00"))
 
-            Text("Leave for work in 18 min")
+            Text(recommendation.title)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(Color(hex: "#3A2500"))
 
-            Text("Rain starts at 9:30 · Bus 401 departs 8:54 · 22 min ride")
+            Text(recommendation.reason)
                 .font(.system(size: 17))
                 .foregroundColor(Color(hex: "#7A4A00"))
 
-            HStack {
-                pill("Bus 401")
-                pill("8:58 arrival")
+            if let place = recommendation.place {
+                HStack {
+                    pill(place.name)
+                    pill(place.category)
 
-                Spacer()
+                    Spacer()
 
-                Text("Navigate")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(Color(hex: "#7A4A00"))
+                    Text("Open")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color(hex: "#7A4A00"))
+                }
             }
         }
         .padding(22)
@@ -88,7 +108,7 @@ struct ForYouView: View {
         )
     }
 
-    func pill(_ text: String) -> some View {
+    private func pill(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 15, weight: .semibold))
             .padding(.horizontal, 16)
@@ -97,7 +117,7 @@ struct ForYouView: View {
             .clipShape(Capsule())
     }
 
-    func insightCard(
+    private func insightCard(
         iconColor: Color,
         title: String,
         text: String,
@@ -142,4 +162,9 @@ struct ForYouView: View {
                 .stroke(Color.divider, lineWidth: 1)
         )
     }
+}
+
+#Preview {
+    ForYouView()
+        .environmentObject(UserPreferencesViewModel())
 }

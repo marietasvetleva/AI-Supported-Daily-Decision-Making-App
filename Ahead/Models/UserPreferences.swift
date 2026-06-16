@@ -1,11 +1,10 @@
 import Foundation
 
-struct UserPreference {
-    
-    let prefersQuietPlaces: Bool
-    let prefersOutdoorPlaces: Bool
-    var transportMode: TransportMode?
-    var interests: Set<Interest>
-    var avoidCrowdedPlaces: Bool
+struct UserPreferences {
+    var transport: String?
+    var decisionStyle: String?
+    var favoritePlaces: [String]
+    var avoidCrowds: Bool
+    var preferQuiet: Bool
+    var maxWalkingMinutes: Int
 }
-
